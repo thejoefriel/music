@@ -16,7 +16,7 @@ const Game = () => {
     console.log("rounded", roundedHeight, roundedWidth);
 
     const keys = ["C", "D", "E", "F", "G", "A", "B"];
-    const scales = [3, 4, 5, 6];
+    const scales = [3, 4, 5];
 
     let key;
     let scale;
@@ -26,8 +26,8 @@ const Game = () => {
       key = keys[roundedWidth - 1];
     }
 
-    if (roundedHeight > 4) {
-      scale = scales[3];
+    if (roundedHeight > 3) {
+      scale = scales[2];
     } else {
       scale = scales[roundedHeight - 1];
     }
@@ -62,11 +62,14 @@ const Game = () => {
       Bodies = Matter.Bodies,
       Mouse = Matter.Mouse,
       MouseConstraint = Matter.MouseConstraint,
-      Composite = Matter.Composite;
+      Composite = Matter.Composite,
+      Events = Matter.Events;
 
     var engine = Engine.create({
       // positionIterations: 20
     });
+
+    var closed = false;
 
     engine.world.gravity.y = 0;
     engine.world.gravity.x = 0;
@@ -75,32 +78,32 @@ const Game = () => {
       element: myRef.current,
       engine: engine,
       options: {
-        width: 800,
-        height: 800,
+        width: 880,
+        height: 400,
         wireframes: false,
       },
     });
 
     // WALLS
     World.add(engine.world, [
-      Bodies.rectangle(400, 0, 800, 50, {
+      Bodies.rectangle(440, 0, 880, 50, {
         isStatic: true,
         restitution: 1,
         // friction: 1,
       }),
-      Bodies.rectangle(400, 800, 800, 50, {
+      Bodies.rectangle(440, 400, 880, 50, {
         isStatic: true,
         restitution: 1,
         // friction: 1,
         // label: "end",
       }),
-      Bodies.rectangle(800, 400, 50, 800, {
+      Bodies.rectangle(930, 400, 50, 880, {
         isStatic: true,
         opacity: 0,
-        // isSensor: true,
-        // label: "end",
+        isSensor: true,
+        label: "end",
       }),
-      Bodies.rectangle(0, 400, 50, 800, {
+      Bodies.rectangle(-50, 400, 50, 880, {
         isStatic: true,
         opacity: 0,
         // isSensor: true,
@@ -109,13 +112,13 @@ const Game = () => {
     ]);
 
     // BALL
-    var ballA = Bodies.circle(400, 100, 15, {
+    var ballA = Bodies.circle(0, 0, 15, {
       restitution: 1,
       inertia: 0,
       friction: 0,
       frictionAir: 0,
       frictionStatic: 0,
-      force: { x: 0, y: 0.01 },
+      force: { x: 0.01, y: 0.01 },
       motion: 1,
       density: 0.0005,
     });
@@ -225,7 +228,25 @@ const Game = () => {
         if (other.label === "ball" || other.label === "Circle Body") {
           //play note
           console.log("title", note, other);
-          synth.triggerAttackRelease(`${note.title1}${note.title2}`, "8n");
+          // synth.triggerAttackRelease(`${note.title1}${note.title2}`, "8n");
+          const sampler = new Tone.Sampler({
+            urls: {
+              C4: "booC.mp3",
+              D4: "booD.mp3",
+              E4: "booE.mp3",
+              F4: "booF.mp3",
+              G4: "booG.mp3",
+              A4: "booA.mp3",
+              B4: "booB.mp3",
+            },
+            release: 1,
+            baseUrl: "./",
+          }).toDestination();
+
+          Tone.loaded().then(() => {
+            sampler.triggerAttackRelease([`${note.title1}4`], 3);
+            synth.triggerAttackRelease(`${note.title1}${note.title2}`, "8n");
+          });
           const yNeg = other.velocity.y < 0;
           const xNeg = other.velocity.x < 0;
           Matter.Body.applyForce(
@@ -239,15 +260,15 @@ const Game = () => {
       if (a.label === "end" || b.label === "end") {
         Composite.add(
           engine.world,
-          Bodies.circle(5, 50, 15, {
+          Bodies.circle(0, 50, 15, {
             restitution: 1,
             inertia: 0,
             friction: 0,
             frictionAir: 0,
             frictionStatic: 0,
-            force: { x: 0, y: 0.01 },
+            force: { x: 0.01, y: 0.01 },
             motion: 1,
-            label: "ball",
+            density: 0.0005,
           }),
         );
       }
@@ -264,7 +285,7 @@ const Game = () => {
 
         const body = a.label === "note" ? b : a;
         Matter.Body.applyForce(
-          body,
+          note,
           { x: body.position.x, y: body.position.y },
           { x: 0.02, y: 0.02 },
         );
@@ -272,27 +293,23 @@ const Game = () => {
     });
 
     document.addEventListener("keydown", function (e) {
-      console.log("hey");
       if (e.keyCode == 32) {
         Composite.add(
           engine.world,
-          Bodies.circle(5, 50, 15, {
+          Bodies.circle(0, 50, 15, {
             restitution: 1,
             inertia: 0,
             friction: 0,
-            firctionStatic: 0,
             frictionAir: 0,
+            frictionStatic: 0,
             force: { x: 0.01, y: 0.01 },
             motion: 1,
-            label: "ball",
+            density: 0.0005,
           }),
         );
       }
       if (e.keyCode == 83) {
         const allBodies = Composite.allBodies(engine.world);
-
-        console.log("hey12", allBodies);
-
         allBodies.forEach((body) => {
           if (body.label === "Circle Body" || body.label === "ball") {
             console.log("hey", body.velocity);
@@ -310,6 +327,38 @@ const Game = () => {
 
       if (e.keyCode == 71) {
         engine.world.gravity.y = engine.world.gravity.y === 1 ? 0 : 1;
+      }
+      if (e.keyCode === 67) {
+        if (closed === false) {
+          Composite.add(engine.world, [
+            Bodies.rectangle(880, 400, 50, 880, {
+              isStatic: true,
+              opacity: 0,
+              // isSensor: true,
+              // label: "end",
+              label: "closed",
+            }),
+            Bodies.rectangle(0, 400, 50, 880, {
+              isStatic: true,
+              opacity: 0,
+              // isSensor: true,
+              // label: "end",
+              label: "closed",
+            }),
+          ]);
+          closed = true;
+        } else {
+          const allBodies = Composite.allBodies(engine.world);
+          console.log("false");
+
+          allBodies.forEach((body) => {
+            if (body.label === "closed") {
+              body.isSensor = "true";
+              body.position = { x: 2000, y: 2000 };
+            }
+          });
+          closed = false;
+        }
       }
     });
 
