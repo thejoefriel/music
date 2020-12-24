@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import Matter, { Body } from "matter-js";
+import React, { useEffect, useRef } from "react";
+import Matter from "matter-js";
 import * as Tone from "tone";
 
 //create a synth and connect it to the main output (your speakers)
@@ -7,7 +7,6 @@ const synth = new Tone.Synth().toDestination();
 
 const Game = () => {
   const myRef = useRef(null);
-  const [noteVals, setNoteVals] = useState([]);
 
   const decideNote = (x, y) => {
     const roundedWidth = Math.floor(x * y * 1000).toString()[0];
@@ -62,8 +61,7 @@ const Game = () => {
       Bodies = Matter.Bodies,
       Mouse = Matter.Mouse,
       MouseConstraint = Matter.MouseConstraint,
-      Composite = Matter.Composite,
-      Events = Matter.Events;
+      Composite = Matter.Composite;
 
     var engine = Engine.create({
       // positionIterations: 20
@@ -140,10 +138,8 @@ const Game = () => {
     World.add(engine.world, mouseConstraint);
 
     var notes = [];
-    var noteToChange = {};
     var mouseDownX;
     var mouseDownY;
-    var rotate = 0;
 
     Matter.Events.on(mouseConstraint, "mousedown", function (event) {
       mouseDownX = event.mouse.position.x;
@@ -159,7 +155,7 @@ const Game = () => {
       if (bodiesUnder.length > 0) {
         document.addEventListener("keydown", function (e) {
           console.log("hey");
-          if (e.keyCode == 82) {
+          if (e.keyCode === 82) {
             console.log("bo", bodiesUnder[0]);
 
             Matter.Body.rotate(bodiesUnder[0], 45);
@@ -293,7 +289,7 @@ const Game = () => {
     });
 
     document.addEventListener("keydown", function (e) {
-      if (e.keyCode == 32) {
+      if (e.keyCode === 32) {
         Composite.add(
           engine.world,
           Bodies.circle(0, 50, 15, {
@@ -308,7 +304,7 @@ const Game = () => {
           }),
         );
       }
-      if (e.keyCode == 83) {
+      if (e.keyCode === 83) {
         const allBodies = Composite.allBodies(engine.world);
         allBodies.forEach((body) => {
           if (body.label === "Circle Body" || body.label === "ball") {
@@ -325,7 +321,7 @@ const Game = () => {
         });
       }
 
-      if (e.keyCode == 71) {
+      if (e.keyCode === 71) {
         engine.world.gravity.y = engine.world.gravity.y === 1 ? 0 : 1;
       }
       if (e.keyCode === 67) {

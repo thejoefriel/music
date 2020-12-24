@@ -1,7 +1,4 @@
-import logo from "./logo.svg";
 import "./App.css";
-import styled from "styled-components";
-import { useState } from "react";
 
 import Game from "./Game";
 
